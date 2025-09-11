@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 // Theme Store
 interface ThemeState {
@@ -7,17 +7,10 @@ interface ThemeState {
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set) => ({
-      theme: 'system',
-      setTheme: (theme) => set({ theme }),
-    }),
-    {
-      name: 'banking-rag-theme',
-    }
-  )
-);
+export const useThemeStore = create<ThemeState>()((set) => ({
+  theme: 'system',
+  setTheme: (theme) => set({ theme }),
+}));
 
 // Language Store
 interface LanguageState {
@@ -25,17 +18,10 @@ interface LanguageState {
   setLanguage: (language: 'es' | 'en') => void;
 }
 
-export const useLanguageStore = create<LanguageState>()(
-  persist(
-    (set) => ({
-      language: 'es',
-      setLanguage: (language) => set({ language }),
-    }),
-    {
-      name: 'banking-rag-language',
-    }
-  )
-);
+export const useLanguageStore = create<LanguageState>()((set) => ({
+  language: 'es',
+  setLanguage: (language) => set({ language }),
+}));
 
 // Auth Store
 interface AuthState {
@@ -51,20 +37,18 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      setAuth: (user, token) => set({ user, token, isAuthenticated: true }),
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
-    }),
-    {
-      name: 'banking-rag-auth',
-    }
-  )
-);
+export const useAuthStore = create<AuthState>()((set) => ({
+  user: {
+    id: '1',
+    email: 'demo@banco.com',
+    name: 'María González',
+    role: 'compliance_expert',
+  },
+  token: 'demo-token',
+  isAuthenticated: true,
+  setAuth: (user, token) => set({ user, token, isAuthenticated: true }),
+  logout: () => set({ user: null, token: null, isAuthenticated: false }),
+}));
 
 // Sidebar Store
 interface SidebarState {
@@ -116,44 +100,37 @@ interface ChatState {
   setLoading: (loading: boolean) => void;
 }
 
-export const useChatStore = create<ChatState>()(
-  persist(
-    (set, get) => ({
-      conversations: [],
-      activeConversation: null,
-      isLoading: false,
-      addConversation: (conversation) => 
-        set((state) => ({ 
-          conversations: [conversation, ...state.conversations] 
-        })),
-      updateConversation: (id, updates) =>
-        set((state) => ({
-          conversations: state.conversations.map((conv) =>
-            conv.id === id ? { ...conv, ...updates } : conv
-          ),
-        })),
-      deleteConversation: (id) =>
-        set((state) => ({
-          conversations: state.conversations.filter((conv) => conv.id !== id),
-          activeConversation: state.activeConversation === id ? null : state.activeConversation,
-        })),
-      setActiveConversation: (id) => set({ activeConversation: id }),
-      addMessage: (conversationId, message) =>
-        set((state) => ({
-          conversations: state.conversations.map((conv) =>
-            conv.id === conversationId
-              ? { 
-                  ...conv, 
-                  messages: [...conv.messages, message],
-                  updatedAt: new Date()
-                }
-              : conv
-          ),
-        })),
-      setLoading: (loading) => set({ isLoading: loading }),
-    }),
-    {
-      name: 'banking-rag-chat',
-    }
-  )
-);
+export const useChatStore = create<ChatState>()((set, get) => ({
+  conversations: [],
+  activeConversation: null,
+  isLoading: false,
+  addConversation: (conversation) => 
+    set((state) => ({ 
+      conversations: [conversation, ...state.conversations] 
+    })),
+  updateConversation: (id, updates) =>
+    set((state) => ({
+      conversations: state.conversations.map((conv) =>
+        conv.id === id ? { ...conv, ...updates } : conv
+      ),
+    })),
+  deleteConversation: (id) =>
+    set((state) => ({
+      conversations: state.conversations.filter((conv) => conv.id !== id),
+      activeConversation: state.activeConversation === id ? null : state.activeConversation,
+    })),
+  setActiveConversation: (id) => set({ activeConversation: id }),
+  addMessage: (conversationId, message) =>
+    set((state) => ({
+      conversations: state.conversations.map((conv) =>
+        conv.id === conversationId
+          ? { 
+              ...conv, 
+              messages: [...conv.messages, message],
+              updatedAt: new Date()
+            }
+          : conv
+      ),
+    })),
+  setLoading: (loading) => set({ isLoading: loading }),
+}));
