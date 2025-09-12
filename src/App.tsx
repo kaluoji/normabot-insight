@@ -14,6 +14,11 @@ import { useAuthStore, useThemeStore } from "./lib/store";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
+import Reports from "./pages/Reports";
+import GapAnalysis from "./pages/GapAnalysis";
+import Comparatives from "./pages/Comparatives";
+import Updates from "./pages/Updates";
+import Alerts from "./pages/Alerts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -82,11 +87,11 @@ const App = () => (
             }>
               <Route index element={<Dashboard />} />
               <Route path="chat" element={<Chat />} />
-              <Route path="reports" element={<div className="p-6">Reportes - En desarrollo</div>} />
-              <Route path="gap-analysis" element={<div className="p-6">Análisis GAP - En desarrollo</div>} />
-              <Route path="comparatives" element={<div className="p-6">Comparativas - En desarrollo</div>} />
-              <Route path="updates" element={<div className="p-6">Novedades - En desarrollo</div>} />
-              <Route path="alerts" element={<div className="p-6">Alertas - En desarrollo</div>} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="gap-analysis" element={<GapAnalysis />} />
+              <Route path="comparatives" element={<Comparatives />} />
+              <Route path="updates" element={<Updates />} />
+              <Route path="alerts" element={<Alerts />} />
               <Route path="admin/users" element={<div className="p-6">Gestión de Usuarios - En desarrollo</div>} />
               <Route path="admin/integrations" element={<div className="p-6">Integraciones - En desarrollo</div>} />
               <Route path="settings" element={<div className="p-6">Configuración - En desarrollo</div>} />
