@@ -38,14 +38,9 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()((set) => ({
-  user: {
-    id: '1',
-    email: 'demo@banco.com',
-    name: 'María González',
-    role: 'compliance_expert',
-  },
-  token: 'demo-token',
-  isAuthenticated: true,
+  user: null,
+  token: null,
+  isAuthenticated: false,
   setAuth: (user, token) => set({ user, token, isAuthenticated: true }),
   logout: () => set({ user: null, token: null, isAuthenticated: false }),
 }));

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Eye, EyeOff, Shield, Globe, Monitor, Sun, Moon } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,9 +20,31 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState('');
   const { isAuthenticated, setAuth } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
   const { language, setLanguage } = useLanguageStore();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          const mockUser = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email || 'Usuario',
+            role: 'compliance_expert' as const,
+          };
+          setAuth(mockUser, session.access_token);
+        } else {
+          setAuth(null, null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [setAuth]);
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -30,20 +53,34 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
-    // Simulate API call
-    setTimeout(() => {
-      // Mock authentication - in real app, call API
-      const mockUser = {
-        id: '1',
-        email,
-        name: 'María González',
-        role: 'compliance_expert' as const,
-      };
-      
-      setAuth(mockUser, 'mock-jwt-token');
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+        
+        if (error) throw error;
+        
+        setError('Registro exitoso. Revisa tu email para confirmar tu cuenta.');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      setError(error.message || 'Error de autenticación');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const translations = {
@@ -53,8 +90,10 @@ export default function Login() {
       email: 'Correo electrónico',
       password: 'Contraseña',
       signIn: 'Iniciar Sesión',
+      signUp: 'Crear Cuenta',
+      signUpMode: '¿No tienes cuenta? Crear una',
+      signInMode: '¿Ya tienes cuenta? Iniciar sesión',
       forgotPassword: '¿Olvidaste tu contraseña?',
-      registrationDisabled: 'El registro está deshabilitado. Contacta al administrador.',
       theme: 'Tema',
       language: 'Idioma',
       light: 'Claro',
@@ -67,8 +106,10 @@ export default function Login() {
       email: 'Email address',
       password: 'Password',
       signIn: 'Sign In',
+      signUp: 'Create Account',
+      signUpMode: "Don't have an account? Create one",
+      signInMode: 'Already have an account? Sign in',
       forgotPassword: 'Forgot your password?',
-      registrationDisabled: 'Registration is disabled. Contact your administrator.',
       theme: 'Theme',
       language: 'Language',
       light: 'Light',
@@ -134,7 +175,9 @@ export default function Login() {
               </div>
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold">{t.title}</CardTitle>
+              <CardTitle className="text-2xl font-bold">
+                {isSignUp ? t.signUp : t.title}
+              </CardTitle>
               <CardDescription className="text-muted-foreground">
                 {t.subtitle}
               </CardDescription>
@@ -142,6 +185,12 @@ export default function Login() {
           </CardHeader>
 
           <CardContent>
+            {error && (
+              <div className="mb-4 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
+                {error}
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">{t.email}</Label>
@@ -189,24 +238,32 @@ export default function Login() {
                 className="w-full gradient-primary hover:opacity-90 transition-opacity"
                 disabled={isLoading}
               >
-                {isLoading ? 'Verificando...' : t.signIn}
+                {isLoading ? 
+                  (isSignUp ? 'Creando cuenta...' : 'Verificando...') : 
+                  (isSignUp ? t.signUp : t.signIn)
+                }
               </Button>
 
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <button
                   type="button"
-                  className="text-sm text-primary hover:text-primary/80 transition-colors"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-sm text-primary hover:text-primary/80 transition-colors block w-full"
                 >
-                  {t.forgotPassword}
+                  {isSignUp ? t.signInMode : t.signUpMode}
                 </button>
+                
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {t.forgotPassword}
+                  </button>
+                )}
               </div>
             </form>
 
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground text-center">
-                {t.registrationDisabled}
-              </p>
-            </div>
           </CardContent>
         </Card>
 
